@@ -185,8 +185,13 @@ def _prep_metadata(md_sect, path):
     # Description file
     if 'description-file' in md_sect:
         description_file = path.parent / md_sect.get('description-file')
-        with description_file.open(encoding='utf-8') as f:
-            raw_desc =  f.read()
+        try:
+            with description_file.open(encoding='utf-8') as f:
+                raw_desc = f.read()
+        except FileNotFoundError:
+            raise ConfigError(
+                "Description file {} does not exist".format(description_file)
+            )
         ext = description_file.suffix
         try:
             mimetype = readme_ext_to_content_type[ext]
@@ -210,7 +215,7 @@ def _prep_metadata(md_sect, path):
 
     if 'urls' in md_sect:
         project_urls = md_dict['project_urls'] = []
-        for label, url in md_sect.pop('urls').items():
+        for label, url in sorted(md_sect.pop('urls').items()):
             project_urls.append("{}, {}".format(label, url))
 
     for key, value in md_sect.items():
@@ -258,33 +263,31 @@ def _prep_metadata(md_sect, path):
         md_dict['name'] = md_dict.pop('dist_name')
 
     # Move dev-requires into requires-extra
+    reqs_noextra = md_dict.pop('requires_dist', [])
+    reqs_by_extra = md_dict.pop('requires_extra', {})
     dev_requires = md_dict.pop('dev_requires', None)
     if dev_requires is not None:
-        re = md_dict.setdefault('requires_extra', {})
-        if 'dev' in re:
-            raise ValueError(
-                'Ambiguity: Encountered dev-requires together with its replacement requires-extra.dev.')
+        if 'dev' in reqs_by_extra:
+            raise ConfigError(
+                'dev-requires occurs together with its replacement requires-extra.dev.')
         else:
             log.warning(
                 '“dev-requires = ...” is obsolete. Use “requires-extra = {"dev" = ...}” instead.')
-            re['dev'] = dev_requires
+            reqs_by_extra['dev'] = dev_requires
 
-    # Process requires-extra
-    re = md_dict.pop('requires_extra', {})
-    req_dist_extra = list(_expand_requires_extra(re))
-    if 'requires_dist' in md_dict:
-        re['.none'] = md_dict['requires_dist'].copy()
-        md_dict['requires_dist'].extend(req_dist_extra)
-    else:
-        md_dict['requires_dist'] = req_dist_extra
-    md_dict['provides_extra'] = sorted(
-        set(md_dict.get('provides_extra', [])) | re.keys()
-    )
+    # Add requires-extra requirements into requires_dist
+    md_dict['requires_dist'] = \
+        reqs_noextra + list(_expand_requires_extra(reqs_by_extra))
 
-    return md_dict, module, re
+    md_dict['provides_extra'] = sorted(reqs_by_extra.keys())
+
+    # For internal use, record the main requirements as a '.none' extra.
+    reqs_by_extra['.none'] = reqs_noextra
+
+    return md_dict, module, reqs_by_extra
 
 def _expand_requires_extra(re):
-    for extra, reqs in re.items():
+    for extra, reqs in sorted(re.items()):
         for req in reqs:
             if ';' in req:
                 name, envmark = req.split(';', 1)

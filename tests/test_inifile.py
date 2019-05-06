@@ -1,4 +1,5 @@
 import logging
+import re
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,10 @@ def test_description_file():
         "Sample description for test.\n"
     assert info['metadata']['description_content_type'] == 'text/x-rst'
 
+def test_missing_description_file():
+    with pytest.raises(ConfigError, match=r"Description file .* does not exist"):
+        read_pkg_ini(samples_dir / 'missing-description-file.toml')
+
 def test_bad_description_extension(caplog):
     info = read_pkg_ini(samples_dir / 'bad-description-ext.toml')
     assert info['metadata']['description_content_type'] is None
@@ -66,9 +71,10 @@ def test_extras():
         'pytest; extra == "test"',
         'requests; extra == "custom"',
     }
+    assert set(info['metadata']['provides_extra']) == {'test', 'custom'}
 
 def test_extras_dev_conflict():
-    with pytest.raises(ValueError, match=r'Ambiguity'):
+    with pytest.raises(ConfigError, match=r'dev-requires'):
         read_pkg_ini(samples_dir / 'extras-dev-conflict.toml')
 
 def test_extras_dev_warning(caplog):

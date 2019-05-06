@@ -5,6 +5,7 @@ from importlib.machinery import SourceFileLoader
 import logging
 import os
 from pathlib import Path
+import re
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +79,8 @@ def get_docstring_and_version_via_ast(target):
     Return a tuple like (docstring, version) for the given module,
     extracted by parsing its AST.
     """
-    with target.file.open() as f:
+    # read as bytes to enable custom encodings
+    with target.file.open('rb') as f:
         node = ast.parse(f.read())
     for child in node.body:
         # Only use the version from the given module if it's a simple
@@ -296,6 +298,15 @@ class Metadata:
 
         if self.description is not None:
             fp.write('\n' + self.description + '\n')
+
+    @property
+    def supports_py2(self) -> bool:
+        """Return True if Requires-Python indicates Python 2 support."""
+        for part in (self.requires_python or "").split(","):
+            if re.search(r"^\s*(>\s*(=\s*)?)?[3-9]", part):
+                return False
+        return True
+
 
 def make_metadata(module, ini_info):
     md_dict = {'name': module.name, 'provides': [module.name]}

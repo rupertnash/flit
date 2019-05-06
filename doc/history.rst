@@ -1,6 +1,44 @@
 Release history
 ===============
 
+Version 1.3
+-----------
+
+- Fix for building sdists from a subdirectory in a Mercurial repository
+  (:ghpull:`233`).
+- Fix for getting the docstring and version from modules defining their encoding
+  (:ghpull:`239`).
+- Fix for installing packages with ``flit installfrom`` (:ghpull:`221`).
+- Packages with requirements no longer get a spurious ``Provides-Extra: .none``
+  metadata entry (:ghissue:`228`).
+- Better check of whether ``python-requires`` includes any Python 2 version
+  (:ghpull:`232`).
+- Better check of home page URLs in ``flit init`` (:ghpull:`230`).
+- Better error message when the description file is not found (:ghpull:`234`).
+- Updated a help message to refer to ``pyproject.toml`` (:ghpull:`240`).
+- Improve tests of ``flit init`` (:ghpull:`229`).
+
+Version 1.2.1
+-------------
+
+- Fix for installing packages with ``flit install``.
+- Make ``requests_download`` an extra dependency, to avoid a circular build
+  dependency. To use ``flit installfrom``, you can install with
+  ``pip install flit[installfrom]``. Note that the ``installfrom`` subcommand
+  is deprecated, as it will soon be possible to use pip to install Flit projects
+  directly from a VCS URL.
+
+Version 1.2
+-----------
+
+- Fixes for packages specifying ``requires-extra``: sdists should now work, and
+  environment markers can be used together with ``requires-extra``.
+- Fix running ``flit installfrom`` without a config file present in the
+  working directory.
+- The error message for a missing or empty docstring tells you what file
+  the docstring should be in.
+- Improvements to documentation on version selectors for requirements.
+
 Version 1.1
 -----------
 

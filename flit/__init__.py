@@ -7,7 +7,7 @@ import sys
 from . import common
 from .log import enable_colourful_output
 
-__version__ = '1.2.dev0'
+__version__ = '1.3'
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def main(argv=None):
     add_shared_install_options(parser_installfrom)
 
     parser_init = subparsers.add_parser('init',
-        help="Prepare flit.ini for a new package"
+        help="Prepare pyproject.toml for a new package"
     )
 
     args = ap.parse_args(argv)
@@ -108,7 +108,7 @@ def main(argv=None):
         from .build import main
         try:
             main(args.ini_file, formats=set(args.format or []))
-        except(common.NoDocstringError) as e:
+        except(common.NoDocstringError, common.VCSError, common.NoVersionError) as e:
             sys.exit(e.args[0])
     elif args.subcmd == 'publish':
         from .upload import main

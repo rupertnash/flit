@@ -30,7 +30,10 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxcontrib_github_alt',
 ]
+
+github_project_url = "https://github.com/takluyver/flit"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -53,7 +56,7 @@ copyright = u'2015, Thomas Kluyver'
 # built documents.
 #
 # The short X.Y version.
-version = '1.2'
+version = '1.3'
 # The full version, including alpha/beta/rc tags.
 release = version #+ '.1'
 
